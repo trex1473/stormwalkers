@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08151d">
+  <meta name="description" content="Listen to Earth through NASA GIBS satellite imagery and NASA POWER daily data.">
+  <title>Stormwalkers — The Earth Information Jukebox</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://gibs.earthdata.nasa.gov">
+  <link rel="preconnect" href="https://power.larc.nasa.gov">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="topbar">
+    <a class="brand" href="/frontend/" aria-label="Stormwalkers home page">
+      <span class="brand-mark" aria-hidden="true">◉</span>
+      <span>
+        <strong>STORMWALKERS</strong>
+        <small>THE EARTH INFORMATION JUKEBOX</small>
+      </span>
+    </a>
+    <div class="topbar-meta"><span class="live-dot" aria-hidden="true"></span> A small experimental project</div>
+  </header>
+
+  <main id="main-content" class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="eyebrow">EARTH · DATA · SOUND</p>
+        <h1 id="page-title">Listen to <span>Earth.</span></h1>
+        <p class="intro-text">Choose a place on the map and explore NASA data. Then you can create a small sound experiment using that data.</p>
+      </div>
+      <div class="source-chips" aria-label="Data sources">
+        <span>NASA GIBS</span><span>NASA POWER</span><span>WAV audio file</span>
+      </div>
+    </section>
+
+    <div id="app-status" class="status-line" role="status" aria-live="polite" aria-atomic="true">
+      Preparing the map…
+    </div>
+
+    <section class="workspace" aria-label="Map and data tools">
+      <section class="panel map-panel" aria-labelledby="map-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">MAP</p>
+            <h2 id="map-heading">World map</h2>
+          </div>
+          <span class="panel-tag">NASA MODIS</span>
+        </div>
+        <p class="panel-hint">Click anywhere on the map to select a location. You can also navigate the map with your keyboard.</p>
+        <div id="map" class="map" role="application" aria-label="World map. Use the arrow keys to move around the map and the plus and minus keys to zoom. Click a location to select its coordinates."></div>
+        <div class="map-actions">
+          <span>After moving the map, you can select the location at its center.</span>
+          <button id="select-center-button" class="button button-secondary map-center-button" type="button">Select map center</button>
+        </div>
+        <div class="map-legend">
+          <span><i class="legend-dot selected" aria-hidden="true"></i> Selected location</span>
+          <span><i class="legend-dot imagery" aria-hidden="true"></i> NASA MODIS imagery</span>
+        </div>
+        <p class="map-attribution">Map imagery: <a href="https://earthdata.nasa.gov/technology/global-imagery-browse-services-gibs" target="_blank" rel="noopener noreferrer">NASA EOSDIS GIBS</a>. Base map: © OpenStreetMap contributors.</p>
+      </section>
+
+      <aside class="panel controls-panel" aria-labelledby="controls-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">LOCATION SETTINGS</p>
+            <h2 id="controls-heading">Location and date</h2>
+          </div>
+          <span class="step-number">1</span>
+        </div>
+        <form id="query-form" class="form-stack">
+          <div class="field-grid">
+            <label class="field">
+              <span>Latitude</span>
+              <input id="latitude" name="latitude" type="number" min="-90" max="90" step="0.0001" value="39.0000" required inputmode="decimal">
+            </label>
+            <label class="field">
+              <span>Longitude</span>
+              <input id="longitude" name="longitude" type="number" min="-180" max="180" step="0.0001" value="35.0000" required inputmode="decimal">
+            </label>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>Start date</span>
+              <input id="start-date" name="start" type="date" required min="1981-01-01">
+            </label>
+            <label class="field">
+              <span>End date</span>
+              <input id="end-date" name="end" type="date" required>
+            </label>
+          </div>
+          <div class="selected-location" aria-live="polite">
+            <span class="selected-icon" aria-hidden="true">⌖</span>
+            <span><small>SELECTED COORDINATES</small><strong id="coordinate-readout">39.0000° N, 35.0000° E</strong></span>
+          </div>
+          <button id="fetch-button" class="button button-primary" type="submit">Fetch NASA data <span aria-hidden="true">↗</span></button>
+          <p class="tiny-note">NASA POWER daily API data covers the period from 1981 to near real time. Data for recent days may be published with a delay. Choose a range of up to 31 days.</p>
+        </form>
+        <div class="divider"></div>
+        <div class="data-source-note">
+          <span class="source-icon" aria-hidden="true">✳</span>
+          <p><strong>Source distinction</strong><br>Satellite imagery comes from GIBS, while temperature/precipitation/wind/humidity measurements come from POWER. The two types of data are processed separately.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel data-panel" aria-labelledby="data-heading">
+      <div class="panel-heading panel-heading-wrap">
+        <div>
+          <p class="eyebrow">NASA POWER DATA</p>
+          <h2 id="data-heading">Environmental data</h2>
+        </div>
+        <span id="period-label" class="panel-tag">No data loaded yet</span>
+      </div>
+      <div id="empty-state" class="empty-state">
+        <span class="empty-symbol" aria-hidden="true">⌁</span>
+        <p>Choose a location and date range, then click <strong>Fetch NASA data</strong>.</p>
+      </div>
+      <div id="data-content" hidden>
+        <div class="metric-grid" aria-label="Average values for the period">
+          <article class="metric-card"><span>AVG. TEMPERATURE</span><strong id="metric-temp">—</strong><small>2 m · °C</small></article>
+          <article class="metric-card"><span>TOTAL PRECIPITATION</span><strong id="metric-rain">—</strong><small>mm / selected period</small></article>
+          <article class="metric-card"><span>AVG. WIND</span><strong id="metric-wind">—</strong><small>10 m · m/s</small></article>
+          <article class="metric-card"><span>AVG. RELATIVE HUMIDITY</span><strong id="metric-humidity">—</strong><small>2 m · %</small></article>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>NASA POWER daily records. A dash means no valid measurement was available from the source.</caption>
+            <thead><tr><th scope="col">Date</th><th scope="col">Temperature °C</th><th scope="col">Precipitation mm</th><th scope="col">Wind m/s</th><th scope="col">Humidity %</th></tr></thead>
+            <tbody id="records-body"></tbody>
+          </table>
+        </div>
+        <p id="power-note" class="tiny-note data-note"></p>
+      </div>
+    </section>
+
+    <section class="panel sound-panel" aria-labelledby="sound-heading">
+      <div class="sound-heading-copy">
+        <p class="eyebrow">SOUND EXPERIMENT</p>
+        <h2 id="sound-heading">Turn data into sound</h2>
+        <p>There are two different sound experiments: POWER uses numerical weather data, while GIBS uses colors from satellite imagery. A new WAV file is generated each time.</p>
+      </div>
+      <div class="sound-actions">
+        <button id="power-sonify-button" class="button button-primary" type="button" disabled>Sonify POWER data <span aria-hidden="true">♫</span></button>
+        <button id="satellite-sonify-button" class="button button-secondary" type="button">Sonify selected location <span aria-hidden="true">◌</span></button>
+      </div>
+      <div class="sound-map-note"><strong>Sound mapping</strong><span>Temperature → pitch</span><span>Precipitation → rhythm</span><span>Wind → noise texture</span><span>Humidity → soft background</span></div>
+      <div id="audio-result" class="audio-result" hidden>
+        <div class="audio-result-top"><strong id="audio-title">Generated audio</strong><a id="audio-download" href="#" download>Download WAV ↗</a></div>
+        <audio id="audio-player" controls preload="none">Your browser does not support audio playback.</audio>
+        <p id="audio-description" class="tiny-note"></p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div><strong>STORMWALKERS</strong><span>I am experimenting with creating sound from Earth data.</span></div>
+      <div class="footer-links"><a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/" target="_blank" rel="noopener noreferrer">NASA POWER API docs</a><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener noreferrer">NASA GIBS docs</a></div>
+    </footer>
+  </main>
+
+  <noscript>JavaScript must be enabled to use the Stormwalkers map and data tools.</noscript>
+</body>
+</html>
