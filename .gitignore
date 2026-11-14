@@ -1,0 +1,17 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# WAV and images created while using the app
+stormwalkers_power_*.wav
+stormwalkers_satellite_*.wav
+nasa_gibs_*.jpg
